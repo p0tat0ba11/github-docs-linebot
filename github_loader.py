@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Union
 
 import dotenv
 import requests
+from langchain_core.documents import Document
 
 dotenv.load_dotenv()
 
@@ -66,17 +67,27 @@ def fetch_github_file_content(file_path: str) -> str:
     decoded_bytes = base64.b64decode(encoded_content)
     return decoded_bytes.decode("utf-8", errors="ignore")
 
+def load_github_documents(dir_path: str = GITHUB_DIR_PATH) -> List[Document]:
+    """Load documents from a GitHub directory into a list of Document objects."""
+    pages = fetch_github_directory_contents(dir_path)
+    documents = []
+
+    for page in pages:
+        if page.get("type") == "file":
+            content = fetch_github_file_content(page["path"])
+            documents.append(Document(
+                page_content=content,
+                metadata={"source": page["name"], "path": page["path"]}
+            ))
+
+    return documents
 
 if __name__ == "__main__":
     try:
-        pages = fetch_github_directory_contents()
-        print(f"Fetched {len(pages)} item(s) from '{GITHUB_DIR_PATH}' in '{GITHUB_OWNER}/{GITHUB_REPO}'.\n")
+        documents = load_github_documents()
+        print(f"Loaded {len(documents)} document(s) from '{GITHUB_DIR_PATH}' in '{GITHUB_OWNER}/{GITHUB_REPO}'.\n")
 
-        for page in pages:
-            if page.get("type") == "file":
-                content = fetch_github_file_content(page["path"])
-                print(f"--- Content of {page['name']} ---")
-                print(content)
-                print("\n" + "=" * 40 + "\n")
+        for doc in documents:
+            print(f"Document Name: {doc.metadata['source']}\nContent Preview:\n{doc.page_content[:200]}...\n")
     except (ValueError, RuntimeError, TypeError) as err:
         print(f"Error: {err}")
