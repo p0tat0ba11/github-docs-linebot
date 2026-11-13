@@ -40,7 +40,7 @@ def create_retriever(
         embedding_model: str = EMBEDDING_MODEL,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
-        search_kwargs: Optional[dict] = None
+        search_kwargs: Optional[dict] = {}
 ) -> FAISS:
     document_chunks = split_documents(documents, chunk_size, chunk_overlap)
     embeddings = GoogleGenerativeAIEmbeddings(model=embedding_model)
@@ -68,7 +68,7 @@ def initialize_rag_pipeline(
         llm_model: str = LLM_MODEL,
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
-        search_kwargs: Optional[dict] = None,
+        search_kwargs: Optional[dict] = {},
         prompt_template: str = SYSTEM_PROMPT
 ):
     docs = documents if documents else load_github_documents()
