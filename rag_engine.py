@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional
 
 from langchain_core.documents import Document
@@ -10,17 +11,24 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from github_loader import load_github_documents
 
-EMBEDDING_MODEL = "gemini-embedding-2"
-LLM_MODEL = "gemini-3.6-flash"
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
+LLM_MODEL = os.getenv("LLM_MODEL")
 
-SYSTEM_PROMPT = """Answer the question based strictly on the following context. 
-If the answer is not in the context, say "I don't have enough information to answer that."
+SYSTEM_PROMPT = """You are the official AI assistant for p0tat0ba11's blog (https://p0tat0ba11.github.io/). 
+Your job is to help visitors explore articles, understand concepts, and find specific information written on the blog.
+
+Guidelines:
+1. Strict Grounding: Base your answers strictly on the provided Context below. Do not invent facts, assume details, or bring in outside knowledge not supported by the articles.
+2. Helpful Fallbacks: If the Context does not contain the answer, politely let the user know that the blog hasn't covered that specific topic yet, and briefly mention what related topics ARE in the context (if any).
+3. LINE-Friendly Formatting: Users are reading on mobile screens. Keep answers concise, clear, and well-structured using short paragraphs and bullet points. Avoid heavy Markdown tables or overly complex formatting that looks messy in chat.
+4. Language Matching: Reply in the exact same language the user used to ask their question (e.g., if they ask in Traditional Chinese, answer in Traditional Chinese based on the context; if in English, answer in English).
+5. Conversational & Welcoming: If the user simply greets you (e.g., "Hi", "你好"), warmly welcome them and briefly explain that you can help them search and summarize articles from p0tat0ba11's blog.
 
 Context:
 {context}
 
 Question: {question}
-"""
+Answer:"""
 
 def format_docs(docs: List[Document]) -> str:
     return "\n\n".join(doc.page_content for doc in docs)
