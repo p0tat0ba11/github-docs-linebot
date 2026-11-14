@@ -10,6 +10,7 @@ from linebot.v3.messaging import (
 )
 from linebot.v3.webhook import WebhookHandler
 from linebot.v3.webhooks import MessageEvent, TextMessageContent
+from sqlalchemy import event
 
 from rag_engine import initialize_rag_pipeline
 
@@ -47,8 +48,13 @@ async def callback(request: Request):
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event: MessageEvent):
     user_question = event.message.text
+    session_id = getattr(event.source, "user_id", None) or "default_session"
+
     try:
-        answer = rag_chain.invoke(user_question)
+        answer = rag_chain.invoke(
+            {"input": user_question},
+            config={"configurable": {"session_id": session_id}},
+        )
     except Exception as e:
         answer = f"Error processing your question: {str(e)}"
 
